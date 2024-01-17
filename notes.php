@@ -27,15 +27,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Edycja notatki
     if (isset($_POST['edit_note'])) {
         $note_id = $_POST['note_id'];
-        $title = $_POST['title_edit'];  // Użyj zmienionej nazwy pola
-        $content = $_POST['content_edit'];  // Użyj zmienionej nazwy pola
+        $title = $_POST['title_edit'];
+        $content = $_POST['content_edit'];
 
-        // Sprawdź, czy notatka należy do aktualnie zalogowanego użytkownika
         $checkOwnershipSql = "SELECT * FROM notes WHERE id=$note_id AND username='$username'";
         $checkOwnershipResult = $conn->query($checkOwnershipSql);
 
         if ($checkOwnershipResult->num_rows == 1) {
-            // Uaktualnij notatkę
             $updateNoteSql = "UPDATE notes SET title='$title', content='$content', modified_at=NOW() WHERE id=$note_id";
             if ($conn->query($updateNoteSql) === TRUE) {
                 header("Location: notes.php");
@@ -51,13 +49,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['delete_note'])) {
         $note_id = $_POST['note_id'];
 
-        $sql = "DELETE FROM notes WHERE id=$note_id AND username='$username'";
+        $checkOwnershipSql = "SELECT * FROM notes WHERE id=$note_id AND username='$username'";
+        $checkOwnershipResult = $conn->query($checkOwnershipSql);
 
-        if ($conn->query($sql) === TRUE) {
-            header("Location: notes.php");
+        if ($checkOwnershipResult->num_rows == 1) {
+            $deleteNoteSql = "DELETE FROM notes WHERE id=$note_id";
+            if ($conn->query($deleteNoteSql) === TRUE) {
+                header("Location: notes.php");
+            } else {
+                $error = "Operation failed";
+            }
         } else {
-            $error = "Operation failed";
+            $error = "You do not have permission to delete this note.";
         }
+    }
+
+    // Wylogowanie użytkownika
+    if (isset($_POST['logout'])) {
+        session_unset();
+        session_destroy();
+        header("Location: login.php");
     }
 }
 
@@ -113,6 +124,11 @@ $result = $conn->query($sql);
             echo "<p>No notes found.</p>";
         }
         ?>
+
+        <!-- Formularz wylogowania się -->
+        <form method="post" action="">
+            <button type="submit" name="logout">Logout</button>
+        </form>
     </div>
 </body>
 </html>
