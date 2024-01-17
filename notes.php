@@ -71,6 +71,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: login.php");
     }
 }
+    // Zmiana hasła użytkownika
+    if (isset($_POST['change_password'])) {
+        $new_password = $_POST['new_password'];
+        $confirm_password = $_POST['confirm_password'];
+
+        // Sprawdź, czy nowe hasło i potwierdzenie są takie same
+        if ($new_password == $confirm_password) {
+            // Zmień hasło w bazie danych
+            $new_hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            $updatePasswordSql = "UPDATE users SET password = '$new_hashed_password' WHERE username = '$username'";
+            
+            if ($conn->query($updatePasswordSql) === TRUE) {
+                $password_change_success = "Password changed successfully";
+            } else {
+                $password_change_error = "Failed to change password";
+            }
+        } else {
+            $password_change_error = "New password and confirmation do not match";
+        }
+    }
 
 // Pobieranie notatek użytkownika
 $sql = "SELECT id, title, content, modified_at FROM notes WHERE username = '$username'";
@@ -89,6 +109,20 @@ $result = $conn->query($sql);
         <h2>Welcome, <?php echo $username; ?>!</h2>
 
         <form method="post" action="">
+            <!-- Formularz zmiany hasła -->
+            <h3>Change Password</h3>
+            <label for="new_password">New Password:</label>
+            <input type="password" name="new_password" required>
+            <br>
+            <label for="confirm_password">Confirm Password:</label>
+            <input type="password" name="confirm_password" required>
+            <br>
+            <button type="submit" name="change_password">Change Password</button>
+        </form>
+
+        <!-- Formularz dodawania notatki -->
+        <h3>Add Note</h3>
+        <form method="post" action="">
             <label for="title">Title:</label>
             <input type="text" name="title" required>
             <br>
@@ -100,6 +134,12 @@ $result = $conn->query($sql);
 
         <?php
         if (isset($error)) echo "<p class='error'>$error</p>";
+
+        if (isset($password_change_success)) {
+            echo "<p class='success'>$password_change_success</p>";
+        } elseif (isset($password_change_error)) {
+            echo "<p class='error'>$password_change_error</p>";
+        }
 
         if ($result->num_rows > 0) {
             echo "<h3>Your Notes:</h3>";
@@ -120,11 +160,8 @@ $result = $conn->query($sql);
                         </form>
                     </div>";
             }
-        } else {
-            echo "<p>No notes found.</p>";
         }
         ?>
-
         <!-- Formularz wylogowania się -->
         <form method="post" action="">
             <button type="submit" name="logout">Logout</button>
@@ -132,3 +169,4 @@ $result = $conn->query($sql);
     </div>
 </body>
 </html>
+
