@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $hashed_password = $row['password'];
 
         // Porównaj hasła
-        if (password_verify($password, $hashed_password)) {
+        if (password_verify($password, $hashed_password)  ) {
             // Hasło jest poprawne, utwórz sesję dla zalogowanego użytkownika
             $_SESSION['username'] = $username;
             header("Location: notes.php");
